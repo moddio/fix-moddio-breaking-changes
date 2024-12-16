@@ -12,6 +12,7 @@ fs.readdirSync('./input').map(fileName => {
     output.data.map.layers = (output.data.map.layers as Array<any>).filter(layer => layer.type !== 'objectgroup');
     output.banIps = []
     output = removeCertainKey(output, 'debris', { currentParentKey: '', targetParentKey: ['collidesWith', 'destroyOnContactWith'] });
+    output = removeCertainKey(output, 'debris', { currentParentKey: '', targetParentKey: ['z-index'] }, (obj) => { obj = { ...obj, layer: 0 } });
     console.log(fileName, ' Done!');
     jsonfile.writeFileSync(`./output/${fileName}`, output);
   });
