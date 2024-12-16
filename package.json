@@ -1,5 +1,16 @@
 {
+	"scripts": {
+		"fixDebris": "ts-node-esm ./src/debris.ts",
+		"downloadTemplates": "ts-node-esm ./src/downloadTemplates.ts"
+	},
 	"devDependencies": {
+		"ts-node": "^10.9.2",
 		"typescript": "^5.7.2"
+	},
+	"dependencies": {
+		"@types/jsonfile": "^6.1.4",
+		"axios": "^1.7.9",
+		"jsonfile": "^6.1.0",
+		"rfdc": "^1.4.1"
 	}
 }
