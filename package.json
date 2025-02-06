@@ -1,6 +1,7 @@
 {
 	"scripts": {
 		"fixDebris": "ts-node-esm ./src/debris.ts",
+		"fixScale": "ts-node-esm ./src/scale.ts",
 		"downloadTemplates": "ts-node-esm ./src/downloadTemplates.ts"
 	},
 	"devDependencies": {
