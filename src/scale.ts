@@ -18,7 +18,7 @@ fs.readdirSync('./input').map(fileName => {
           targetParentKey: ['position', 'size'],
           insideParentKeys: ['bodies'],
           excludeKeys: ['z-index', 'rotate', 'mountRotation'],
-          brotherEntries: [["dataType", "region"]],
+          brotherEntries: [["dataType", "region"], ["function", "xyCoordinate"]],
           parent: {}
         }, (v) => {
           if (typeof v[key] === 'number' || typeof v[key] === 'string') {

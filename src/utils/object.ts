@@ -94,7 +94,12 @@ export const modifyCertainKey = (obj: AnyObj,
           }
         }
 
-        if(force) {
+        let force_to_update = false
+        if (parentKey === undefined || (!parentKey.excludeKeys.includes(parentKey.currentParentKey) && parentKey.brotherEntries.some(([k, v]) => parentKey.parent[k] === v))) {
+          force_to_update = true;
+        }
+
+        if (force || force_to_update) {
           should_trigger_effect = true;
         }
 
