@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Upload JSON</title>
+</head>
+
+<body>
+  <!-- File Upload Button -->
+  <input type="file" id="uploadJson" accept=".json" />
+  <button onclick="handleJson('scale', {revert: false})">fix scale (use world unit)</button>
+  <button onclick="handleJson('scale', {revert: true})">fix scale (use pixel unit)</button>
+  <button onclick="handleJson('debris')">remove debris</button>
+
+  <script src="bundle.js" type="text/javascript"></script>
+  <script>
+    let jsonObject = null;
+
+    // Function to handle the uploaded JSON file
+    function handleJson(type, vars) {
+      const fileInput = document.getElementById('uploadJson');
+      const file = fileInput.files[0];
+
+      if (!file) {
+        alert('Please select a JSON file first!');
+        return;
+      }
+
+      const reader = new FileReader();
+
+      // Read the file as text
+      const { fixScale, fixDebris } = window.fixes;
+      reader.onload = function (event) {
+        try {
+          // Parse the JSON content
+          jsonObject = JSON.parse(event.target.result);
+          let fix;
+          let prefix = '';
+          switch (type) {
+            case 'debris': {
+              fix = fixDebris
+              prefix = 'remove_debris'
+              break;
+            }
+            case 'scale': {
+              fix = (obj) => { return fixScale(obj, vars.revert) };
+              prefix = `fixed_scale${vars.revert ? '(pixel_unit)' : '(world_unit)'}`
+              break;
+            }
+          }
+          downloadJson(fix(jsonObject), `${prefix}_${file.name}`);
+        } catch (error) {
+          console.error('Error parsing JSON:', error);
+          alert('Invalid JSON file!');
+        }
+      };
+      // Read the file
+      reader.readAsText(file);
+    }
+
+    // Function to download the JSON object as a file
+    function downloadJson(jsonObj, name) {
+      const jsonString = JSON.stringify(jsonObj, null, 2); // Convert JSON object to string
+      const blob = new Blob([jsonString], { type: 'application/json' }); // Create a Blob
+      const url = URL.createObjectURL(blob); // Create a URL for the Blob
+
+      // Create a temporary anchor element to trigger the download
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${name}`; // Set the filename with the fixed prefix
+      document.body.appendChild(a);
+      a.click(); // Trigger the download
+      document.body.removeChild(a); // Clean up the DOM
+      URL.revokeObjectURL(url); // Revoke the Blob URL
+    }
+  </script>
+</body>
+
+</html>
