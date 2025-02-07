@@ -1,7 +1,9 @@
 {
+	"main": "dist/index.js",
 	"scripts": {
-		"fixDebris": "ts-node-esm ./src/debris.ts",
-		"fixScale": "ts-node-esm ./src/scale.ts",
+		"build": "npx esbuild index.ts --bundle --outfile=dist/bundle.js --platform=browser --external:fs --external:graceful-fs",
+		"fixDebris": "npx -y tsx ./src/debris.ts",
+		"fixScale": "npx -y tsx ./src/scale.ts",
 		"downloadTemplates": "ts-node-esm ./src/downloadTemplates.ts"
 	},
 	"devDependencies": {
