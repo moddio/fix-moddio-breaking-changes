@@ -36,14 +36,14 @@
   var require_rfdc = __commonJS({
     "node_modules/.pnpm/rfdc@1.4.1/node_modules/rfdc/index.js"(exports, module) {
       "use strict";
-      module.exports = rfdc4;
+      module.exports = rfdc5;
       function copyBuffer(cur) {
         if (cur instanceof Buffer) {
           return Buffer.from(cur);
         }
         return new cur.constructor(cur.buffer.slice(), cur.byteOffset, cur.length);
       }
-      function rfdc4(opts) {
+      function rfdc5(opts) {
         opts = opts || {};
         if (opts.circles) return rfdcCircles(opts);
         const constructorHandlers = /* @__PURE__ */ new Map();
@@ -423,6 +423,9 @@
         }
       }
     }
+    if (parentKey?.currentParentKey === targetKey) {
+      should_trigger_effect = true;
+    }
     if (should_trigger_effect) {
       effect?.(newObj);
     }
@@ -558,6 +561,113 @@
     return output;
   };
 
+  // src/fixture.ts
+  var import_rfdc4 = __toESM(require_rfdc());
+  if (typeof window === "undefined") {
+    const jsonfile = require_jsonfile();
+    const fs = __require("fs");
+    fs.readdirSync("./input").map((fileName) => {
+      jsonfile.readFile(`./input/${fileName}`, function(err, obj) {
+        if (err) {
+          console.error(fileName, err);
+        }
+        let output = fixFixture(obj, process.argv[2] === "--moveUpHalfDepth");
+        console.log(fileName, " Done!");
+        jsonfile.writeFileSync(`./output/${fileName}`, output);
+      });
+    });
+  }
+  var fixFixture = (obj, moveUpHalfDepth = false) => {
+    let output = (0, import_rfdc4.default)()(obj);
+    const keysNeededToMove = ["collidesWith", "allowSleep", "bullet"];
+    const map = { "width": "x", "height": "y", "depth": "z" };
+    ["bodies"].forEach((key) => {
+      output = modifyCertainKey(
+        output,
+        key,
+        {
+          parentKeys: [],
+          currentParentKey: "",
+          targetParentKey: [],
+          insideParentKeys: [],
+          excludeKeys: [],
+          brotherEntries: [],
+          parent: {}
+        },
+        (obj2) => {
+          for (let [bodyKey, body] of Object.entries(obj2)) {
+            const newFixtures = (0, import_rfdc4.default)()(body.fixtures);
+            const newObj = {};
+            for (let [k, v] of Object.entries(body)) {
+              if (keysNeededToMove.includes(k)) {
+                newFixtures.forEach((fixture, idx) => {
+                  if (!fixture.scale) {
+                    fixture.scale = {
+                      x: 1,
+                      y: 1,
+                      z: 1
+                    };
+                  }
+                  if (!fixture.offset) {
+                    fixture.offset = {
+                      x: 0,
+                      y: 0,
+                      z: 0
+                    };
+                  }
+                  if (body.fixtures[idx].size === void 0 || body.fixtures[idx].size.width === void 0) {
+                    fixture.fitRendering = true;
+                  }
+                  switch (fixture.shape.type) {
+                    case "rectangle": {
+                      if (fixture.size) {
+                        ["width", "height", "depth"].forEach((key2) => {
+                          if (fixture.size[key2]) {
+                            fixture.scale[map[key2]] = Number(fixture.size[key2]);
+                          }
+                        });
+                      }
+                      break;
+                    }
+                    case "circle": {
+                      if (fixture.size) {
+                        ["width", "height", "depth"].forEach((key2) => {
+                          if (fixture.size[key2]) {
+                            fixture.scale = {
+                              x: Number(Math.max(Math.max(fixture.size.width ?? 0, fixture.size.height ?? 0), fixture.size.depth ?? 0)),
+                              y: Number(Math.max(Math.max(fixture.size.width ?? 0, fixture.size.height ?? 0), fixture.size.depth ?? 0)),
+                              z: Number(Math.max(Math.max(fixture.size.width ?? 0, fixture.size.height ?? 0), fixture.size.depth ?? 0))
+                            };
+                          }
+                        });
+                      }
+                      break;
+                    }
+                    case "capsule": {
+                      break;
+                    }
+                  }
+                  ["size"].forEach((key2) => {
+                    delete fixture[key2];
+                  });
+                  if (moveUpHalfDepth) {
+                    fixture.offset.z = body.fixtures[idx].size?.depth ? body.fixtures[idx].size.depth / 2 : body.depth ? body.depth / 2 : 0;
+                  }
+                  fixture[k] = v;
+                });
+              } else {
+                newObj[k] = v;
+              }
+            }
+            newObj.fixtures = newFixtures;
+            obj2[bodyKey] = newObj;
+          }
+        }
+      );
+    });
+    return output;
+  };
+
   // src/index.ts
-  window.fixes = { fixScale, fixDebris };
+  window.fixes = { fixScale, fixDebris, fixFixture };
 })();
