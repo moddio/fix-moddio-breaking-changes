@@ -488,6 +488,26 @@
         }
       );
     });
+    ["range", "maxAttackRange", "sensorRadius"].forEach((key) => {
+      output = modifyCertainKey(
+        output,
+        key,
+        {
+          parentKeys: [],
+          currentParentKey: "",
+          targetParentKey: ["visibilityMask", "ai"],
+          insideParentKeys: [],
+          excludeKeys: [],
+          brotherEntries: [],
+          parent: {}
+        },
+        (v) => {
+          if (typeof v[key] === "number" || typeof v[key] === "string") {
+            v[key] = Number(v[key]) * scaleRatio;
+          }
+        }
+      );
+    });
     ["min", "max", "value"].forEach((key) => {
       output = modifyCertainKey(
         output,
