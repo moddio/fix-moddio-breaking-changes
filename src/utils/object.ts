@@ -108,8 +108,14 @@ export const modifyCertainKey = (obj: AnyObj,
       }
     }
   }
+
+  if (parentKey?.currentParentKey === targetKey) {
+    should_trigger_effect = true;
+  }
+
   if (should_trigger_effect) {
     effect?.(newObj);
   }
+
   return newObj;
 }

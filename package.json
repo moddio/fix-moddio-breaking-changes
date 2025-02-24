@@ -4,6 +4,7 @@
 		"build": "npx esbuild index.ts --bundle --outfile=dist/bundle.js --platform=browser --external:fs --external:graceful-fs",
 		"fixDebris": "npx -y tsx ./src/debris.ts",
 		"fixScale": "npx -y tsx ./src/scale.ts",
+		"fixFixture": "npx -y tsx ./src/fixture.ts",
 		"downloadTemplates": "ts-node-esm ./src/downloadTemplates.ts",
 		"deploy": "pnpm run build && gh-pages -d dist"
 	},

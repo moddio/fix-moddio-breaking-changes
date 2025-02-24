@@ -13,6 +13,9 @@
   <button onclick="handleJson('scale', {revert: false})">fix scale (use world unit)</button>
   <button onclick="handleJson('scale', {revert: true})">fix scale (use pixel unit)</button>
   <button onclick="handleJson('debris')">remove debris</button>
+  <button onclick="handleJson('fixture', {moveUpHalfDepth: false})">fix fixtures in body settings</button>
+  <button onclick="handleJson('fixture', {moveUpHalfDepth: true})">fix fixtures in body settings (move collider.offset.z
+    up half depth)</button>
 
   <script src="bundle.js" type="text/javascript"></script>
   <script>
@@ -31,7 +34,7 @@
       const reader = new FileReader();
 
       // Read the file as text
-      const { fixScale, fixDebris } = window.fixes;
+      const { fixScale, fixDebris, fixFixture } = window.fixes;
       reader.onload = function (event) {
         try {
           // Parse the JSON content
@@ -47,6 +50,11 @@
             case 'scale': {
               fix = (obj) => { return fixScale(obj, vars.revert) };
               prefix = `fixed_scale${vars.revert ? '(pixel_unit)' : '(world_unit)'}`
+              break;
+            }
+            case 'fixture': {
+              fix = (obj) => { return fixFixture(obj, vars.moveUpHalfDepth) };
+              prefix = `fixed_fixture${vars.moveUpHalfDepth ? '(moveUpHalfDepth)' : ''}`;
               break;
             }
           }
