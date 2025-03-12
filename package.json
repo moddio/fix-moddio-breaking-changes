@@ -5,6 +5,7 @@
 		"fixDebris": "npx -y tsx ./src/debris.ts",
 		"fixScale": "npx -y tsx ./src/scale.ts",
 		"fixFixture": "npx -y tsx ./src/fixture.ts",
+		"fixDamping": "npx -y tsx ./src/damping.ts",
 		"downloadTemplates": "ts-node-esm ./src/downloadTemplates.ts",
 		"deploy": "pnpm run build && gh-pages -d dist"
 	},
