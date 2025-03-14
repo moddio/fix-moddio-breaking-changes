@@ -2,12 +2,7 @@
 	"main": "dist/index.js",
 	"scripts": {
 		"build": "npx esbuild index.ts --bundle --outfile=dist/bundle.js --platform=browser --external:fs --external:graceful-fs",
-		"fixDebris": "npx -y tsx ./src/debris.ts",
-		"fixScale": "npx -y tsx ./src/scale.ts",
-		"fixFixture": "npx -y tsx ./src/fixture.ts",
-		"fixDamping": "npx -y tsx ./src/damping.ts",
-		"offsetColliders": "npx -y tsx ./src/offsetColliders.ts",
-		"lockXYRotations": "npx -y tsx ./src/lockXYRotations.ts",
+		"convert": "npx -y tsx ./src/convert.ts",
 		"downloadTemplates": "ts-node-esm ./src/downloadTemplates.ts",
 		"deploy": "pnpm run build && gh-pages -d dist"
 	},

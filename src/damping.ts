@@ -1,25 +1,7 @@
-import rfdc from 'rfdc'
 import { AnyObj, modifyCertainKey } from './utils/object';
 
-if (typeof window === 'undefined') {
-  const jsonfile = require('jsonfile')
-  const fs = require('fs')
-  fs.readdirSync('./input').map((fileName: any) => {
-    jsonfile.readFile(`./input/${fileName}`, function (err: any, obj: Record<string, any>) {
-      if (err) {
-        console.error(fileName, err);
-      }
-      let output = fixScale(obj);
-
-      console.log(fileName, ' Done!');
-      jsonfile.writeFileSync(`./output/${fileName}`, output);
-    });
-  })
-
-}
-
-export const fixScale = (obj: AnyObj, revert = false) => {
-  let output = rfdc()(obj);
+export const fixDamping = (obj: AnyObj, revert = false) => {
+  let output = obj;
 
   ['linearDamping'].forEach(key => {
     output = modifyCertainKey(output, key,
