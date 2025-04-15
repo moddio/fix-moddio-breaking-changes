@@ -27,7 +27,7 @@ export const fixFixture = (obj: AnyObj) => {
           }
 
           if (hasBody) {
-            delete body['body'];
+            // delete body['body'];
           }
         }
       });
@@ -50,10 +50,6 @@ export const fixFixture = (obj: AnyObj) => {
           const height = +(body.height ?? 0.625);
           const depth = +(body.depth ?? 0.625);
 
-          delete body.width;
-          delete body.height;
-          delete body.depth;
-
           if (!body.fixtures)
             continue;
 
@@ -65,7 +61,7 @@ export const fixFixture = (obj: AnyObj) => {
 
             if (fixture.shape?.type) {
               fixture.type = fixture.shape.type;
-              delete fixture.shape;
+              // delete fixture.shape;
             }
           });
 
@@ -73,7 +69,7 @@ export const fixFixture = (obj: AnyObj) => {
           for (let [k, v] of Object.entries(body)) {
             if (['collidesWith'].includes(k)) {
               newFixtures.forEach((fixture: any, idx) => fixture[k] = v );
-              delete newObj[k];
+              // delete newObj[k];
             } else {
               newObj[k] = v;
             }

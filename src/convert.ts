@@ -25,12 +25,16 @@ if (typeof window === 'undefined') {
       output = lockXYRotations(output);
       output = offsetColliders(output);
 
-      output.worldId = "";
-      output.engineVersion = "3.0.5";
-      output.clientPhysicsEngine = "";
-      output.physicsEngine = "rapier3d";
-      output.clientSidePredictionEnabled = false;
-      output.data.settings.gravity = { x: 0, y: 0, z: -9.81 };
+      // output.worldId = "";
+      output.engineVersion = "3.0.8";
+      output.clientPhysicsEngine = "rapier2d";
+      output.physicsEngine = "rapier2d";
+      // output.clientSidePredictionEnabled = false;
+      // output.data.settings.gravity = { x: 0, y: 0, z: -9.81 };
+      const physicsScale = 1 / 64;
+      output.data.settings.gravity.x = (output.data.settings.gravity.x ?? 0) * physicsScale;
+      output.data.settings.gravity.y = (output.data.settings.gravity.y ?? 0) * physicsScale;
+      output.data.settings.gravity.z = (output.data.settings.gravity.z ?? 0) * physicsScale;
 
       jsonfile.writeFileSync(`./output/${fileName}`, output);
 
