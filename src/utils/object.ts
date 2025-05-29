@@ -2,7 +2,7 @@ import rfdc from "rfdc";
 
 export type AnyObj = Record<string, any>
 
-export const removeCertainKey = (obj: AnyObj, targetKey: string, parentKey?: { currentParentKey: string, targetParentKey: string[] }, effect?: (obj: AnyObj) => void): AnyObj => {
+export const removeCertainKey = (obj: AnyObj, targetKey: string, parentKey?: { currentParentKey: string, targetParentKey?: string[] }, effect?: (obj: AnyObj) => void, options?: { onlyRemovedWhenNullOrUndefined: boolean }): AnyObj => {
   const newObj: AnyObj = {}
   let should_trigger_effect = false;
   if (obj === undefined || obj === null || Array.isArray(obj)) {
@@ -16,15 +16,22 @@ export const removeCertainKey = (obj: AnyObj, targetKey: string, parentKey?: { c
         if (nowParentKey) {
           nowParentKey.currentParentKey = k;
         }
-        newObj[k] = removeCertainKey(v, targetKey, nowParentKey, effect)
+        const newValue = removeCertainKey(v, targetKey, nowParentKey, effect)
+        if (k !== targetKey) {
+          newObj[k] = newValue
+        } else {
+          should_trigger_effect = true;
+        }
         break;
       }
 
       default: {
-        if (parentKey === undefined || parentKey.targetParentKey.includes(parentKey.currentParentKey)) {
+        if (parentKey === undefined || parentKey.targetParentKey === undefined || parentKey.targetParentKey?.includes(parentKey.currentParentKey)) {
           if (targetKey === k) {
             should_trigger_effect = true;
-            break;
+            if (!options?.onlyRemovedWhenNullOrUndefined || (options?.onlyRemovedWhenNullOrUndefined && (v === undefined || v === null))) {
+              break;
+            }
           }
         }
 
@@ -33,6 +40,10 @@ export const removeCertainKey = (obj: AnyObj, targetKey: string, parentKey?: { c
       }
     }
   }
+  if (parentKey?.currentParentKey === targetKey) {
+    should_trigger_effect = true;
+  }
+
   if (should_trigger_effect) {
     effect?.(newObj);
   }
