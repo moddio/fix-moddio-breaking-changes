@@ -10,21 +10,21 @@
 <body>
   <!-- File Upload Button -->
   <input type="file" id="uploadJson" accept=".json" />
-  <button onclick="handleJson('scale', {revert: false})">fix scale (use world unit)</button>
-  <button onclick="handleJson('scale', {revert: true})">fix scale (use pixel unit)</button>
-  <button onclick="handleJson('debris')">remove debris</button>
-  <button onclick="handleJson('fixture', {moveUpHalfDepth: false})">fix fixtures in body settings</button>
-  <button onclick="handleJson('fixture', {moveUpHalfDepth: true})">fix fixtures in body settings (move collider.offset.z
-    up half depth)</button>
+  <label>
+    <input type="checkbox" id="fixScaleCheckbox" />
+    fix scale (use world unit)
+  </label>
+  <button onclick="handleCombined()">make g</button>
 
   <script src="bundle.js" type="text/javascript"></script>
   <script>
     let jsonObject = null;
 
-    // Function to handle the uploaded JSON file
-    function handleJson(type, vars) {
+    // Combined handler for "make g" button, applies fixScale if checkbox is checked, then removeUnwantedProperties
+    function handleCombined() {
       const fileInput = document.getElementById('uploadJson');
       const file = fileInput.files[0];
+      const fixScaleChecked = document.getElementById('fixScaleCheckbox').checked;
 
       if (!file) {
         alert('Please select a JSON file first!');
@@ -32,39 +32,29 @@
       }
 
       const reader = new FileReader();
+      const { fixScale, removeUnwantedProperties } = window.fixes;
 
-      // Read the file as text
-      const { fixScale, fixDebris, fixFixture } = window.fixes;
       reader.onload = function (event) {
         try {
-          // Parse the JSON content
           jsonObject = JSON.parse(event.target.result);
-          let fix;
+          let processed = jsonObject;
           let prefix = '';
-          switch (type) {
-            case 'debris': {
-              fix = fixDebris
-              prefix = 'remove_debris'
-              break;
-            }
-            case 'scale': {
-              fix = (obj) => { return fixScale(obj, vars.revert) };
-              prefix = `fixed_scale${vars.revert ? '(pixel_unit)' : '(world_unit)'}`
-              break;
-            }
-            case 'fixture': {
-              fix = (obj) => { return fixFixture(obj, vars.moveUpHalfDepth) };
-              prefix = `fixed_fixture${vars.moveUpHalfDepth ? '(moveUpHalfDepth)' : ''}`;
-              break;
-            }
+
+          if (fixScaleChecked) {
+            processed = fixScale(processed, false);
+            prefix += 'fixed_scale(world_unit)_';
           }
-          downloadJson(fix(jsonObject), `${prefix}_${file.name}`);
+
+          processed = removeUnwantedProperties(processed);
+          prefix += 'remove_unwanted_properties_';
+
+          downloadJson(processed, `${prefix}${file.name}`);
         } catch (error) {
           console.error('Error parsing JSON:', error);
           alert('Invalid JSON file!');
         }
       };
-      // Read the file
+
       reader.readAsText(file);
     }
 

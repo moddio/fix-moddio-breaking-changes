@@ -36,14 +36,14 @@
   var require_rfdc = __commonJS({
     "node_modules/.pnpm/rfdc@1.4.1/node_modules/rfdc/index.js"(exports, module) {
       "use strict";
-      module.exports = rfdc5;
+      module.exports = rfdc3;
       function copyBuffer(cur) {
         if (cur instanceof Buffer) {
           return Buffer.from(cur);
         }
         return new cur.constructor(cur.buffer.slice(), cur.byteOffset, cur.length);
       }
-      function rfdc5(opts) {
+      function rfdc3(opts) {
         opts = opts || {};
         if (opts.circles) return rfdcCircles(opts);
         const constructorHandlers = /* @__PURE__ */ new Map();
@@ -338,12 +338,9 @@
     }
   });
 
-  // src/scale.ts
-  var import_rfdc2 = __toESM(require_rfdc());
-
   // src/utils/object.ts
   var import_rfdc = __toESM(require_rfdc());
-  var removeCertainKey = (obj, targetKey, parentKey, effect) => {
+  var removeCertainKey = (obj, targetKey, parentKey, effect, options) => {
     const newObj = {};
     let should_trigger_effect = false;
     if (obj === void 0 || obj === null || Array.isArray(obj)) {
@@ -356,20 +353,30 @@
           if (nowParentKey) {
             nowParentKey.currentParentKey = k;
           }
-          newObj[k] = removeCertainKey(v, targetKey, nowParentKey, effect);
+          const newValue = removeCertainKey(v, targetKey, nowParentKey, effect);
+          if (k !== targetKey) {
+            newObj[k] = newValue;
+          } else {
+            should_trigger_effect = true;
+          }
           break;
         }
         default: {
-          if (parentKey === void 0 || parentKey.targetParentKey.includes(parentKey.currentParentKey)) {
+          if (parentKey === void 0 || parentKey.targetParentKey === void 0 || parentKey.targetParentKey?.includes(parentKey.currentParentKey)) {
             if (targetKey === k) {
               should_trigger_effect = true;
-              break;
+              if (!options?.onlyRemovedWhenNullOrUndefined || options?.onlyRemovedWhenNullOrUndefined && (v === void 0 || v === null)) {
+                break;
+              }
             }
           }
           newObj[k] = v;
           break;
         }
       }
+    }
+    if (parentKey?.currentParentKey === targetKey) {
+      should_trigger_effect = true;
     }
     if (should_trigger_effect) {
       effect?.(newObj);
@@ -433,22 +440,8 @@
   };
 
   // src/scale.ts
-  if (typeof window === "undefined") {
-    const jsonfile = require_jsonfile();
-    const fs = __require("fs");
-    fs.readdirSync("./input").map((fileName) => {
-      jsonfile.readFile(`./input/${fileName}`, function(err, obj) {
-        if (err) {
-          console.error(fileName, err);
-        }
-        let output = fixScale(obj);
-        console.log(fileName, " Done!");
-        jsonfile.writeFileSync(`./output/${fileName}`, output);
-      });
-    });
-  }
   var fixScale = (obj, revert = false) => {
-    let output = (0, import_rfdc2.default)()(obj);
+    let output = obj;
     const scaleRatio = revert ? 64 : 1 / 64;
     const physicsRatio = revert ? 1 / (30 / 64) : 30 / 64;
     ["x", "y", "z", "width", "height", "depth"].forEach((key) => {
@@ -461,7 +454,10 @@
           targetParentKey: ["position", "size"],
           insideParentKeys: ["bodies"],
           excludeKeys: ["z-index", "rotate", "mountRotation"],
-          brotherEntries: [["dataType", "region"], ["function", "xyCoordinate"]],
+          brotherEntries: [
+            ["dataType", "region"],
+            ["function", "xyCoordinate"]
+          ],
           parent: {}
         },
         (v) => {
@@ -531,27 +527,74 @@
         }
       );
     });
+    ["baseSpeed"].forEach((key) => {
+      output = modifyCertainKey(
+        output,
+        key,
+        {
+          parentKeys: [],
+          currentParentKey: "",
+          targetParentKey: [],
+          insideParentKeys: ["unitTypes"],
+          excludeKeys: [],
+          brotherEntries: [],
+          parent: {}
+        },
+        (v) => {
+          if (typeof v[key] === "number" || typeof v[key] === "string") {
+            v[key] = Number(v[key]) * physicsRatio;
+          }
+        }
+      );
+    });
+    [
+      "offsetX",
+      "offsetY",
+      "height",
+      "width",
+      "depth",
+      "x",
+      "y",
+      "z",
+      "rotation"
+    ].forEach((key) => {
+      output = modifyCertainKey(
+        output,
+        key,
+        {
+          parentKeys: [],
+          currentParentKey: "",
+          targetParentKey: [
+            "damageHitBox",
+            "bulletStartPosition",
+            "unitAnchor",
+            "itemAnchor",
+            "selected",
+            "dropped",
+            "default",
+            "unselected",
+            "spawnPosition",
+            "body",
+            "holdPosition"
+          ],
+          insideParentKeys: [],
+          excludeKeys: [],
+          brotherEntries: [],
+          parent: {}
+        },
+        (v) => {
+          if (typeof v[key] === "number" || typeof v[key] === "string") {
+            v[key] = Number(v[key]) * scaleRatio;
+          }
+        }
+      );
+    });
     return output;
   };
 
   // src/debris.ts
-  var import_rfdc3 = __toESM(require_rfdc());
-  if (typeof window === "undefined") {
-    const jsonfile = require_jsonfile();
-    const fs = __require("fs");
-    fs.readdirSync("./input").map((fileName) => {
-      jsonfile.readFile(`./input/${fileName}`, function(err, obj) {
-        if (err) {
-          console.error(fileName, err);
-        }
-        let output = fixDebris(obj);
-        console.log(fileName, " Done!");
-        jsonfile.writeFileSync(`./output/${fileName}`, output);
-      });
-    });
-  }
   var fixDebris = (obj) => {
-    let output = (0, import_rfdc3.default)()(obj);
+    let output = obj;
     output.banIps = [];
     output.data.map.layers = output.data.map.layers.filter((layer) => layer.type !== "objectgroup");
     output = removeCertainKey(output, "debris", { currentParentKey: "", targetParentKey: ["collidesWith", "destroyOnContactWith"] });
@@ -562,26 +605,38 @@
   };
 
   // src/fixture.ts
-  var import_rfdc4 = __toESM(require_rfdc());
-  if (typeof window === "undefined") {
-    const jsonfile = require_jsonfile();
-    const fs = __require("fs");
-    fs.readdirSync("./input").map((fileName) => {
-      jsonfile.readFile(`./input/${fileName}`, function(err, obj) {
-        if (err) {
-          console.error(fileName, err);
+  var import_rfdc2 = __toESM(require_rfdc());
+  var fixFixture = (obj) => {
+    let output = obj;
+    ["unitTypes"].forEach((key) => {
+      output = modifyCertainKey(
+        output,
+        key,
+        {
+          parentKeys: [],
+          currentParentKey: "",
+          targetParentKey: [],
+          insideParentKeys: [],
+          excludeKeys: [],
+          brotherEntries: [],
+          parent: {}
+        },
+        (obj2) => {
+          for (let [_, body] of Object.entries(obj2)) {
+            let hasBody = false;
+            for (let [key2, _2] of Object.entries(body)) {
+              if (key2 === "body") {
+                hasBody = true;
+                break;
+              }
+            }
+            if (hasBody) {
+            }
+          }
         }
-        let output = fixFixture(obj, process.argv[2] === "--moveUpHalfDepth");
-        console.log(fileName, " Done!");
-        jsonfile.writeFileSync(`./output/${fileName}`, output);
-      });
+      );
     });
-  }
-  var fixFixture = (obj, moveUpHalfDepth = false) => {
-    let output = (0, import_rfdc4.default)()(obj);
-    const keysNeededToMove = ["collidesWith", "allowSleep", "bullet"];
-    const map = { "width": "x", "height": "y", "depth": "z" };
-    ["bodies"].forEach((key) => {
+    ["bodies", "bodyTypes"].forEach((key) => {
       output = modifyCertainKey(
         output,
         key,
@@ -596,65 +651,23 @@
         },
         (obj2) => {
           for (let [bodyKey, body] of Object.entries(obj2)) {
-            const newFixtures = (0, import_rfdc4.default)()(body.fixtures);
+            const width = +(body.width ?? 0.625);
+            const height = +(body.height ?? 0.625);
+            const depth = +(body.depth ?? 0.625);
+            if (!body.fixtures)
+              continue;
+            const newFixtures = (0, import_rfdc2.default)()(body.fixtures);
+            newFixtures.forEach((fixture, idx) => {
+              fixture.size = { x: width, y: height, z: depth };
+              fixture.offset = { x: 0, y: 0, z: 0 };
+              if (fixture.shape?.type) {
+                fixture.type = fixture.shape.type;
+              }
+            });
             const newObj = {};
             for (let [k, v] of Object.entries(body)) {
-              if (keysNeededToMove.includes(k)) {
-                newFixtures.forEach((fixture, idx) => {
-                  if (!fixture.scale) {
-                    fixture.scale = {
-                      x: 1,
-                      y: 1,
-                      z: 1
-                    };
-                  }
-                  if (!fixture.offset) {
-                    fixture.offset = {
-                      x: 0,
-                      y: 0,
-                      z: 0
-                    };
-                  }
-                  if (body.fixtures[idx].size === void 0 || body.fixtures[idx].size.width === void 0) {
-                    fixture.fitRendering = true;
-                  }
-                  switch (fixture.shape.type) {
-                    case "rectangle": {
-                      if (fixture.size) {
-                        ["width", "height", "depth"].forEach((key2) => {
-                          if (fixture.size[key2]) {
-                            fixture.scale[map[key2]] = Number(fixture.size[key2]);
-                          }
-                        });
-                      }
-                      break;
-                    }
-                    case "circle": {
-                      if (fixture.size) {
-                        ["width", "height", "depth"].forEach((key2) => {
-                          if (fixture.size[key2]) {
-                            fixture.scale = {
-                              x: Number(Math.max(Math.max(fixture.size.width ?? 0, fixture.size.height ?? 0), fixture.size.depth ?? 0)),
-                              y: Number(Math.max(Math.max(fixture.size.width ?? 0, fixture.size.height ?? 0), fixture.size.depth ?? 0)),
-                              z: Number(Math.max(Math.max(fixture.size.width ?? 0, fixture.size.height ?? 0), fixture.size.depth ?? 0))
-                            };
-                          }
-                        });
-                      }
-                      break;
-                    }
-                    case "capsule": {
-                      break;
-                    }
-                  }
-                  ["size"].forEach((key2) => {
-                    delete fixture[key2];
-                  });
-                  if (moveUpHalfDepth) {
-                    fixture.offset.z = body.fixtures[idx].size?.depth ? body.fixtures[idx].size.depth / 2 : body.depth ? body.depth / 2 : 0;
-                  }
-                  fixture[k] = v;
-                });
+              if (["collidesWith"].includes(k)) {
+                newFixtures.forEach((fixture, idx) => fixture[k] = v);
               } else {
                 newObj[k] = v;
               }
@@ -668,6 +681,176 @@
     return output;
   };
 
+  // src/removeUnwantedProperties.ts
+  if (typeof window === "undefined") {
+    const jsonfile = require_jsonfile();
+    const fs = __require("fs");
+    fs.readdirSync("./input").map((fileName) => {
+      jsonfile.readFile(
+        `./input/${fileName}`,
+        function(err, obj) {
+          if (err) {
+            console.error(fileName, err);
+          }
+          let output = removeUnwantedProperties(obj);
+          console.log(fileName, " Done!");
+          jsonfile.writeFileSync(`./output/${fileName}`, output);
+        }
+      );
+    });
+  }
+  var removeUnwantedProperties = (obj) => {
+    let output = obj;
+    [
+      "destroyedOnCollisionWithWall/unit",
+      "fitRendering",
+      "projectile",
+      // Renamed from "bullet" to "projectile"
+      "explosiveTimer",
+      "destroyOnContactWith",
+      "damageDelay",
+      "handle",
+      "isStackable",
+      // Exists in Taro but not used
+      "bulletDestroyedOnCollisionWithWall/unitType",
+      "hits",
+      // Exists in Taro but not used
+      "constantSpeed +DestroyedOnCollisionWithWall/unit",
+      "reloadRate",
+      "knockbackForce",
+      // Exists in Taro but not used
+      "bulletDestroyedOnCollisionWithWall/unitForce",
+      "bulletDestroyedOnCollisionWithWall/unitStartPosition",
+      "bulletDestroyedOnCollisionWithWall/unitDistance",
+      "bulletDestroyedOnCollisionWithWall/unit",
+      "penetration",
+      // Exists in Taro but not used
+      "destroyTimer",
+      "delayBeforeUse",
+      "ignoreServerStream",
+      "movementType",
+      "clientPredictedMovement",
+      "price",
+      // Consider if this is needed in unit
+      "handle",
+      // In unit
+      "constants",
+      // Consider if this is needed
+      "currency",
+      "allowDuplicateIPS",
+      "allowDuplicateIPs",
+      // and "allowDuplicateIPS"
+      "clientSidePredictionEnabled",
+      // Global property
+      "enableMiniMap",
+      "sandboxMode",
+      "extrapolation",
+      "moreIoGames",
+      "allowGuestMode",
+      // Consider if this is needed
+      "autoSave",
+      // Consider if this is needed
+      "canHostPrivateServers",
+      // Consider if this is needed
+      "enableVideoChat",
+      // Consider if this is needed
+      "holdPosition",
+      "isTangible",
+      "isFlying",
+      "typeWhenDrop",
+      "infinite",
+      "nextobjectid",
+      "orientation",
+      "renderorder",
+      "tiledversion",
+      "explosiveTimer",
+      // Duplicate entry
+      "designatedInventorySlot",
+      "knockbackForce",
+      // Duplicate entry
+      "handle",
+      // Duplicate entry
+      "upperAngle",
+      "lowerAngle",
+      "buffTypes"
+    ].forEach((key) => {
+      output = removeCertainKey(output, key);
+    });
+    output = removeCertainKey(output, "debris", { currentParentKey: "", targetParentKey: ["collidesWith", "destroyOnContactWith"] });
+    ["scripts"].forEach((key) => {
+      output = modifyCertainKey(
+        output,
+        key,
+        {
+          parentKeys: [],
+          currentParentKey: "",
+          targetParentKey: [],
+          insideParentKeys: [],
+          excludeKeys: [],
+          brotherEntries: [],
+          parent: {}
+        },
+        (o) => {
+          Object.values(o).forEach((obj2) => {
+            delete obj2.conditions;
+            if (obj2.moddScript && obj2.moddScript !== "") {
+              delete obj2.actions;
+            }
+          });
+        }
+      );
+    });
+    ["propTypes", "itemTypes", "projectileTypes"].forEach((key) => {
+      output = modifyCertainKey(
+        output,
+        key,
+        {
+          parentKeys: [],
+          currentParentKey: "",
+          targetParentKey: [],
+          insideParentKeys: [],
+          excludeKeys: [],
+          brotherEntries: [],
+          parent: {}
+        },
+        (o) => {
+          Object.values(o).forEach((obj2) => {
+            if (obj2.controls === null) {
+              delete obj2.controls;
+            }
+          });
+        }
+      );
+    });
+    ["bodyTypes"].forEach((key) => {
+      output = modifyCertainKey(
+        output,
+        key,
+        {
+          parentKeys: [],
+          currentParentKey: "",
+          targetParentKey: [],
+          insideParentKeys: [],
+          excludeKeys: [],
+          brotherEntries: [],
+          parent: {}
+        },
+        (o) => {
+          Object.values(o).forEach((obj2) => {
+            ["linearDamping", "angularDamping"].forEach((k) => {
+              if (typeof obj2[k] === "number") {
+                const v = obj2[k];
+                obj2[k] = { x: v, y: v, z: v };
+              }
+            });
+          });
+        }
+      );
+    });
+    output.engineVersion = "3.0.12";
+    return output;
+  };
+
   // src/index.ts
-  window.fixes = { fixScale, fixDebris, fixFixture };
+  window.fixes = { fixScale, fixDebris, fixFixture, removeUnwantedProperties };
 })();
