@@ -18,6 +18,11 @@
     </label>
     <br>
     <label>
+      <input type="checkbox" id="useRapier2d" checked>
+      use rapier2d
+    </label>
+    <br>
+    <label>
       <input type="checkbox" id="fixScalePixel">
       fix scale (use pixel unit)
     </label>
@@ -97,7 +102,7 @@
       const fixScalePixel = document.getElementById('fixScalePixel').checked;
       const fixFixture = document.getElementById('fixFixture').checked;
       const moveUpHalfDepth = document.getElementById('moveUpHalfDepth').checked;
-
+      const useRapier2d  = document.getElementById('useRapier2d').checked;
       const reader = new FileReader();
 
       const { fixScale, removeUnwantedProperties, fixFixture: fixFixtureFn } = window.fixes;
@@ -116,6 +121,11 @@
           } else if (fixScalePixel) {
             obj = fixScale(obj, true);
             prefixParts.push('fixed_scale(pixel_unit)');
+          }
+
+          if(useRapier2d) {
+            obj.physicsEngine = 'rapier2d';
+            obj.clientPhysicsEngine = 'rapier2d';
           }
 
           // Apply fixture fix if checked
