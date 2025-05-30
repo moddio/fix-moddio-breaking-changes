@@ -444,29 +444,6 @@
     let output = obj;
     const scaleRatio = revert ? 64 : 1 / 64;
     const physicsRatio = revert ? 1 / (30 / 64) : 30 / 64;
-    ["x", "y", "z", "width", "height", "depth"].forEach((key) => {
-      output = modifyCertainKey(
-        output,
-        key,
-        {
-          parentKeys: [],
-          currentParentKey: "",
-          targetParentKey: ["position", "size"],
-          insideParentKeys: ["bodies"],
-          excludeKeys: ["z-index", "rotate", "mountRotation"],
-          brotherEntries: [
-            ["dataType", "region"],
-            ["function", "xyCoordinate"]
-          ],
-          parent: {}
-        },
-        (v) => {
-          if (typeof v[key] === "number" || typeof v[key] === "string") {
-            v[key] = Number(v[key]) * scaleRatio;
-          }
-        }
-      );
-    });
     ["default"].forEach((key) => {
       output = modifyCertainKey(
         output,
@@ -772,7 +749,8 @@
       // Duplicate entry
       "upperAngle",
       "lowerAngle",
-      "buffTypes"
+      "buffTypes",
+      "body"
     ].forEach((key) => {
       output = removeCertainKey(output, key);
     });
