@@ -47,9 +47,6 @@
         fixScalePixel.checked = false;
       } else if (changedId === 'fixScalePixel' && fixScalePixel.checked) {
         fixScaleWorld.checked = false;
-      } else if (!fixScaleWorld.checked && !fixScalePixel.checked) {
-        // Always keep at least one checked, default to world
-        fixScaleWorld.checked = true;
       }
     }
 
@@ -58,7 +55,6 @@
       const fixFixture = document.getElementById('fixFixture');
       const moveUpHalfDepth = document.getElementById('moveUpHalfDepth');
       if (!fixFixture.checked) {
-        moveUpHalfDepth.checked = false;
         moveUpHalfDepth.disabled = true;
       } else {
         moveUpHalfDepth.disabled = false;
