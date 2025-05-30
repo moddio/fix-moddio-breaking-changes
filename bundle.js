@@ -749,8 +749,7 @@
       // Duplicate entry
       "upperAngle",
       "lowerAngle",
-      "buffTypes",
-      "body"
+      "buffTypes"
     ].forEach((key) => {
       output = removeCertainKey(output, key);
     });
@@ -778,7 +777,30 @@
         }
       );
     });
-    ["propTypes", "itemTypes", "projectileTypes"].forEach((key) => {
+    ["body"].forEach((key) => {
+      output = modifyCertainKey(
+        output,
+        key,
+        {
+          parentKeys: [],
+          currentParentKey: "",
+          targetParentKey: [],
+          insideParentKeys: [],
+          excludeKeys: [],
+          brotherEntries: [],
+          parent: {}
+        },
+        (o) => {
+          Object.values(o).forEach((obj2) => {
+            delete obj2.conditions;
+            if (obj2.moddScript && obj2.moddScript !== "") {
+              delete obj2.actions;
+            }
+          });
+        }
+      );
+    });
+    ["unitTypes", "propTypes", "itemTypes", "projectileTypes"].forEach((key) => {
       output = modifyCertainKey(
         output,
         key,
@@ -795,6 +817,9 @@
           Object.values(o).forEach((obj2) => {
             if (obj2.controls === null) {
               delete obj2.controls;
+            }
+            if (typeof obj2.body === "object") {
+              delete obj2.body;
             }
           });
         }
