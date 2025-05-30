@@ -822,7 +822,7 @@
         }
       );
     });
-    ["bodyTypes", "propTypes", "itemTypes", "projectileTypes", "unitTypes"].forEach((key) => {
+    ["bodyTypes", "bodies"].forEach((key) => {
       output = modifyCertainKey(
         output,
         key,
