@@ -10,68 +10,151 @@
 <body>
   <!-- File Upload Button -->
   <input type="file" id="uploadJson" accept=".json" />
-  <label>
-    <input type="checkbox" id="fixScaleCheckbox" />
-    fix scale (use world unit)
-  </label>
-  <button onclick="handleCombined()">make g</button>
+
+  <div style="margin: 1em 0;">
+    <label>
+      <input type="checkbox" id="fixScaleWorld" checked>
+      fix scale (use world unit)
+    </label>
+    <br>
+    <label>
+      <input type="checkbox" id="fixScalePixel">
+      fix scale (use pixel unit)
+    </label>
+    <br>
+    <label>
+      <input type="checkbox" id="fixFixture" checked>
+      fix fixtures in body settings
+    </label>
+    <br>
+    <label>
+      <input type="checkbox" id="moveUpHalfDepth" checked>
+      move collider.offset.z up half depth (in fixture fix)
+    </label>
+  </div>
+
+  <button onclick="handleJson()">remove deprecated properties</button>
 
   <script src="bundle.js" type="text/javascript"></script>
   <script>
     let jsonObject = null;
 
-    // Combined handler for "make g" button, applies fixScale if checkbox is checked, then removeUnwantedProperties
-    function handleCombined() {
+    // Enforce only one of fixScaleWorld or fixScalePixel can be checked
+    function enforceScaleCheckboxes(changedId) {
+      const fixScaleWorld = document.getElementById('fixScaleWorld');
+      const fixScalePixel = document.getElementById('fixScalePixel');
+      if (changedId === 'fixScaleWorld' && fixScaleWorld.checked) {
+        fixScalePixel.checked = false;
+      } else if (changedId === 'fixScalePixel' && fixScalePixel.checked) {
+        fixScaleWorld.checked = false;
+      } else if (!fixScaleWorld.checked && !fixScalePixel.checked) {
+        // Always keep at least one checked, default to world
+        fixScaleWorld.checked = true;
+      }
+    }
+
+    // Enforce moveUpHalfDepth can only be checked if fixFixture is checked
+    function enforceMoveUpHalfDepth() {
+      const fixFixture = document.getElementById('fixFixture');
+      const moveUpHalfDepth = document.getElementById('moveUpHalfDepth');
+      if (!fixFixture.checked) {
+        moveUpHalfDepth.checked = false;
+        moveUpHalfDepth.disabled = true;
+      } else {
+        moveUpHalfDepth.disabled = false;
+      }
+    }
+
+    // Attach event listeners after DOM is loaded
+    window.addEventListener('DOMContentLoaded', function () {
+      const fixScaleWorld = document.getElementById('fixScaleWorld');
+      const fixScalePixel = document.getElementById('fixScalePixel');
+      const fixFixture = document.getElementById('fixFixture');
+      const moveUpHalfDepth = document.getElementById('moveUpHalfDepth');
+
+      fixScaleWorld.addEventListener('change', function () {
+        enforceScaleCheckboxes('fixScaleWorld');
+      });
+      fixScalePixel.addEventListener('change', function () {
+        enforceScaleCheckboxes('fixScalePixel');
+      });
+
+      fixFixture.addEventListener('change', function () {
+        enforceMoveUpHalfDepth();
+      });
+
+      // Initial state for moveUpHalfDepth
+      enforceMoveUpHalfDepth();
+    });
+
+    // Function to handle the uploaded JSON file and apply selected fixes
+    function handleJson() {
       const fileInput = document.getElementById('uploadJson');
       const file = fileInput.files[0];
-      const fixScaleChecked = document.getElementById('fixScaleCheckbox').checked;
 
       if (!file) {
         alert('Please select a JSON file first!');
         return;
       }
 
+      const fixScaleWorld = document.getElementById('fixScaleWorld').checked;
+      const fixScalePixel = document.getElementById('fixScalePixel').checked;
+      const fixFixture = document.getElementById('fixFixture').checked;
+      const moveUpHalfDepth = document.getElementById('moveUpHalfDepth').checked;
+
       const reader = new FileReader();
-      const { fixScale, removeUnwantedProperties } = window.fixes;
+
+      const { fixScale, removeUnwantedProperties, fixFixture: fixFixtureFn } = window.fixes;
 
       reader.onload = function (event) {
         try {
           jsonObject = JSON.parse(event.target.result);
-          let processed = jsonObject;
-          let prefix = '';
+          let obj = JSON.parse(JSON.stringify(jsonObject)); // deep clone
 
-          if (fixScaleChecked) {
-            processed = fixScale(processed, false);
-            prefix += 'fixed_scale(world_unit)_';
+          let prefixParts = [];
+
+          // Only one of fixScaleWorld or fixScalePixel can be checked
+          if (fixScaleWorld) {
+            obj = fixScale(obj, false);
+            prefixParts.push('fixed_scale(world_unit)');
+          } else if (fixScalePixel) {
+            obj = fixScale(obj, true);
+            prefixParts.push('fixed_scale(pixel_unit)');
           }
 
-          processed = removeUnwantedProperties(processed);
-          prefix += 'remove_unwanted_properties_';
+          // Apply fixture fix if checked
+          if (fixFixture) {
+            obj = fixFixtureFn(obj, moveUpHalfDepth);
+            prefixParts.push('fixed_fixture' + (moveUpHalfDepth ? '(moveUpHalfDepth)' : ''));
+          }
 
-          downloadJson(processed, `${prefix}${file.name}`);
+          // Always remove unwanted properties
+          obj = removeUnwantedProperties(obj);
+          prefixParts.push('remove_unwanted_properties');
+
+          const prefix = prefixParts.join('_');
+          downloadJson(obj, `${prefix}_${file.name}`);
         } catch (error) {
           console.error('Error parsing JSON:', error);
           alert('Invalid JSON file!');
         }
       };
-
       reader.readAsText(file);
     }
 
     // Function to download the JSON object as a file
     function downloadJson(jsonObj, name) {
-      const jsonString = JSON.stringify(jsonObj, null, 2); // Convert JSON object to string
-      const blob = new Blob([jsonString], { type: 'application/json' }); // Create a Blob
-      const url = URL.createObjectURL(blob); // Create a URL for the Blob
+      const jsonString = JSON.stringify(jsonObj, null, 2);
+      const blob = new Blob([jsonString], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
 
-      // Create a temporary anchor element to trigger the download
       const a = document.createElement('a');
       a.href = url;
-      a.download = `${name}`; // Set the filename with the fixed prefix
+      a.download = `${name}`;
       document.body.appendChild(a);
-      a.click(); // Trigger the download
-      document.body.removeChild(a); // Clean up the DOM
-      URL.revokeObjectURL(url); // Revoke the Blob URL
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
     }
   </script>
 </body>
