@@ -102,7 +102,7 @@
       const fixScalePixel = document.getElementById('fixScalePixel').checked;
       const fixFixture = document.getElementById('fixFixture').checked;
       const moveUpHalfDepth = document.getElementById('moveUpHalfDepth').checked;
-      const useRapier2d  = document.getElementById('useRapier2d').checked;
+      const useRapier2d = document.getElementById('useRapier2d').checked;
       const reader = new FileReader();
 
       const { fixScale, removeUnwantedProperties, fixFixture: fixFixtureFn } = window.fixes;
@@ -123,9 +123,11 @@
             prefixParts.push('fixed_scale(pixel_unit)');
           }
 
-          if(useRapier2d) {
+          if (useRapier2d) {
             obj.physicsEngine = 'rapier2d';
-            obj.clientPhysicsEngine = 'rapier2d';
+            if (obj.clientPhysicsEngine !== '') {
+              obj.clientPhysicsEngine = 'rapier2d';
+            }
           }
 
           // Apply fixture fix if checked
