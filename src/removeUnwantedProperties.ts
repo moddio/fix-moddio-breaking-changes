@@ -104,7 +104,7 @@ export const removeUnwantedProperties = (obj: any) => {
       });
   });
 
-  ['propTypes', 'itemTypes', 'projectileTypes'].forEach(key => {
+  ['body'].forEach(key => {
     output = modifyCertainKey(output, key,
       {
         parentKeys: [],
@@ -116,15 +116,40 @@ export const removeUnwantedProperties = (obj: any) => {
         parent: {}
       }, (o) => {
         Object.values(o).forEach((obj) => {
-          if(obj.controls === null) {
-            delete obj.controls;
+
+          delete obj.conditions;
+          if (obj.moddScript && obj.moddScript !== '') {
+            delete obj.actions;
           }
         })
         // console.log(obj)
       });
   });
 
-  ['bodyTypes'].forEach(key => {
+  ['unitTypes', 'propTypes', 'itemTypes', 'projectileTypes'].forEach(key => {
+    output = modifyCertainKey(output, key,
+      {
+        parentKeys: [],
+        currentParentKey: '',
+        targetParentKey: [],
+        insideParentKeys: [],
+        excludeKeys: [],
+        brotherEntries: [],
+        parent: {}
+      }, (o) => {
+        Object.values(o).forEach((obj) => {
+          if (obj.controls === null) {
+            delete obj.controls;
+          }
+          if (typeof obj.body === 'object') {
+            delete obj.body;
+          }
+        })
+        // console.log(obj)
+      });
+  });
+
+  ['bodyTypes', 'bodies'].forEach(key => {
     output = modifyCertainKey(output, key,
       {
         parentKeys: [],

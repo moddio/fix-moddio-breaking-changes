@@ -4,6 +4,7 @@
 		"build": "npx esbuild index.ts --bundle --outfile=dist/bundle.js --platform=browser --external:fs --external:graceful-fs",
 		"convert": "npx -y tsx ./src/convert.ts",
 		"downloadTemplates": "ts-node-esm ./src/downloadTemplates.ts",
+		"backupTom": "ts-node-esm ./src/backupTom.ts",
 		"deploy": "pnpm run build && gh-pages -d dist",
 		"removeUnwantedProperties": "npx -y tsx ./src/removeUnwantedProperties.ts"
 	},

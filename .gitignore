@@ -3,3 +3,4 @@
 /output
 dist/bundle.js
 *.zip
+/backup

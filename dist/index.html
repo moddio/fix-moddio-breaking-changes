@@ -18,74 +18,19 @@
     </label>
     <br>
     <label>
-      <input type="checkbox" id="fixScalePixel">
-      fix scale (use pixel unit)
+      <input type="checkbox" id="useRapier2d" checked>
+      use rapier2d
     </label>
     <br>
-    <label>
-      <input type="checkbox" id="fixFixture" checked>
-      fix fixtures in body settings
-    </label>
-    <br>
-    <label>
-      <input type="checkbox" id="moveUpHalfDepth" checked>
-      move collider.offset.z up half depth (in fixture fix)
-    </label>
   </div>
 
-  <button onclick="handleJson()">remove deprecated properties</button>
+  <button onclick="handleJson()">Download</button>
+  <label>Warning: this tool can't auto fix the value in script</label>
 
   <script src="bundle.js" type="text/javascript"></script>
   <script>
     let jsonObject = null;
 
-    // Enforce only one of fixScaleWorld or fixScalePixel can be checked
-    function enforceScaleCheckboxes(changedId) {
-      const fixScaleWorld = document.getElementById('fixScaleWorld');
-      const fixScalePixel = document.getElementById('fixScalePixel');
-      if (changedId === 'fixScaleWorld' && fixScaleWorld.checked) {
-        fixScalePixel.checked = false;
-      } else if (changedId === 'fixScalePixel' && fixScalePixel.checked) {
-        fixScaleWorld.checked = false;
-      } else if (!fixScaleWorld.checked && !fixScalePixel.checked) {
-        // Always keep at least one checked, default to world
-        fixScaleWorld.checked = true;
-      }
-    }
-
-    // Enforce moveUpHalfDepth can only be checked if fixFixture is checked
-    function enforceMoveUpHalfDepth() {
-      const fixFixture = document.getElementById('fixFixture');
-      const moveUpHalfDepth = document.getElementById('moveUpHalfDepth');
-      if (!fixFixture.checked) {
-        moveUpHalfDepth.checked = false;
-        moveUpHalfDepth.disabled = true;
-      } else {
-        moveUpHalfDepth.disabled = false;
-      }
-    }
-
-    // Attach event listeners after DOM is loaded
-    window.addEventListener('DOMContentLoaded', function () {
-      const fixScaleWorld = document.getElementById('fixScaleWorld');
-      const fixScalePixel = document.getElementById('fixScalePixel');
-      const fixFixture = document.getElementById('fixFixture');
-      const moveUpHalfDepth = document.getElementById('moveUpHalfDepth');
-
-      fixScaleWorld.addEventListener('change', function () {
-        enforceScaleCheckboxes('fixScaleWorld');
-      });
-      fixScalePixel.addEventListener('change', function () {
-        enforceScaleCheckboxes('fixScalePixel');
-      });
-
-      fixFixture.addEventListener('change', function () {
-        enforceMoveUpHalfDepth();
-      });
-
-      // Initial state for moveUpHalfDepth
-      enforceMoveUpHalfDepth();
-    });
 
     // Function to handle the uploaded JSON file and apply selected fixes
     function handleJson() {
@@ -98,13 +43,13 @@
       }
 
       const fixScaleWorld = document.getElementById('fixScaleWorld').checked;
-      const fixScalePixel = document.getElementById('fixScalePixel').checked;
-      const fixFixture = document.getElementById('fixFixture').checked;
-      const moveUpHalfDepth = document.getElementById('moveUpHalfDepth').checked;
-
+      // const fixScalePixel = document.getElementById('fixScalePixel').checked;
+      // const fixFixture = document.getElementById('fixFixture').checked;
+      // const moveUpHalfDepth = document.getElementById('moveUpHalfDepth').checked;
+      const useRapier2d = document.getElementById('useRapier2d').checked;
       const reader = new FileReader();
 
-      const { fixScale, removeUnwantedProperties, fixFixture: fixFixtureFn } = window.fixes;
+      const { fixScale, removeUnwantedProperties } = window.fixes;
 
       reader.onload = function (event) {
         try {
@@ -117,15 +62,13 @@
           if (fixScaleWorld) {
             obj = fixScale(obj, false);
             prefixParts.push('fixed_scale(world_unit)');
-          } else if (fixScalePixel) {
-            obj = fixScale(obj, true);
-            prefixParts.push('fixed_scale(pixel_unit)');
-          }
+          } 
 
-          // Apply fixture fix if checked
-          if (fixFixture) {
-            obj = fixFixtureFn(obj, moveUpHalfDepth);
-            prefixParts.push('fixed_fixture' + (moveUpHalfDepth ? '(moveUpHalfDepth)' : ''));
+          if (useRapier2d) {
+            obj.physicsEngine = 'rapier2d';
+            if (obj.clientPhysicsEngine !== '') {
+              obj.clientPhysicsEngine = 'rapier2d';
+            }
           }
 
           // Always remove unwanted properties

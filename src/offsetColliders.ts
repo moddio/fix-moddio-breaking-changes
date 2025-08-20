@@ -19,7 +19,7 @@ export const offsetColliders = (obj: AnyObj, revert = false) => {
       (obj) => {
         for (let [bodyKey, body] of Object.entries(obj)) {
           for (let [k, v] of Object.entries(body)) {
-            body.fixtures.forEach((fixture: any) => {
+            body.fixtures?.forEach((fixture: any) => {
               const depth = body.depth ?? 0;
               const fixtureDepth = fixture.size.z ?? 0;
               const hz = (fixture.fitRendering ? depth : fixtureDepth) / 2
