@@ -32,6 +32,7 @@
     let jsonObject = null;
 
 
+
     // Function to handle the uploaded JSON file and apply selected fixes
     function handleJson() {
       const fileInput = document.getElementById('uploadJson');
@@ -43,13 +44,12 @@
       }
 
       const fixScaleWorld = document.getElementById('fixScaleWorld').checked;
+
       // const fixScalePixel = document.getElementById('fixScalePixel').checked;
       // const fixFixture = document.getElementById('fixFixture').checked;
       // const moveUpHalfDepth = document.getElementById('moveUpHalfDepth').checked;
       const useRapier2d = document.getElementById('useRapier2d').checked;
       const reader = new FileReader();
-
-      const { fixScale, removeUnwantedProperties } = window.fixes;
 
       reader.onload = function (event) {
         try {
@@ -74,6 +74,7 @@
           // Always remove unwanted properties
           obj = removeUnwantedProperties(obj);
           prefixParts.push('remove_unwanted_properties');
+
 
           const prefix = prefixParts.join('_');
           downloadJson(obj, `${prefix}_${file.name}`);
