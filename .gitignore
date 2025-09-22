@@ -5,3 +5,4 @@ dist/bundle.js
 *.zip
 /backup
 /tom
+.env

@@ -17,6 +17,7 @@
 	"dependencies": {
 		"@types/jsonfile": "^6.1.4",
 		"axios": "^1.7.9",
+		"dotenv": "^16.6.1",
 		"jsonfile": "^6.1.0",
 		"rfdc": "^1.4.1"
 	}
