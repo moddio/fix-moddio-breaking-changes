@@ -3,10 +3,11 @@
 	"scripts": {
 		"build": "npx esbuild index.ts --bundle --outfile=dist/bundle.js --platform=browser --external:fs --external:graceful-fs",
 		"convert": "npx -y tsx ./src/convert.ts",
-		"downloadTemplates": "ts-node-esm ./src/downloadTemplates.ts",
-		"backupTom": "ts-node-esm ./src/backupTom.ts",
+		"downloadTemplates": "ts-node ./src/downloadTemplates.ts",
+		"backupTom": "ts-node ./src/backupTom.ts",
 		"deploy": "pnpm run build && gh-pages -d dist",
-		"removeUnwantedProperties": "npx -y tsx ./src/removeUnwantedProperties.ts"
+		"removeUnwantedProperties": "npx -y tsx ./src/removeUnwantedProperties.ts",
+		"tsdocs:generate": "npx -y tsx ./tsdocs/generateTSDocs.ts"
 	},
 	"devDependencies": {
 		"gh-pages": "^6.3.0",
